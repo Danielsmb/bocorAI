@@ -178,43 +178,68 @@
                             <img id="enhanceGifResult" alt="Enhanced GIF">
                         </div>
                     </div>
-                    <div class="controls-panel">
-                        <div class="control-group">
-                            <label>Mode</label>
-                            <select id="enhanceGifMode">
-                                <option value="sharpen">Pertajam</option>
-                                <option value="denoise">Kurangi Noise</option>
-                                <option value="upscale">Upscale 2x</option>
-                                <option value="colorize">Perkaya Warna</option>
-                            </select>
-                        </div>
-                        <div class="control-group">
-                            <label>Kekuatan</label>
-                            <input type="range" id="enhanceGifStrength" min="0" max="100" value="60">
-                            <span class="range-value" id="enhanceGifStrengthVal">60%</span>
-                        </div>
-                        <button class="btn-primary btn-lg" onclick="processGifEnhance()">
-                            <i class="fas fa-wand-magic-sparkles"></i> Perbaiki GIF
-                        </button>
-                        <div class="btn-group">
-                            <button class="btn-secondary" onclick="downloadResult('enhanceGifResult')">
-                                <i class="fas fa-download"></i> Unduh GIF
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="progress-overlay" id="enhanceGifProgress" style="display:none;">
-                    <div class="progress-card">
-                        <div class="spinner"></div>
-                        <h3>Memproses GIF...</h3>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="enhanceGifProgressBar"></div>
-                        </div>
-                        <p id="enhanceGifProgressText">Membaca frame...</p>
-                    </div>
-                </div>
-            </div>
-
+<div class="controls-panel">
+    <div class="control-group">
+        <label>🎯 Mode Enhancement</label>
+        <select id="enhanceGifMode">
+            <option value="sharpen">🔪 Ultra Sharpen (Unsharp Mask)</option>
+            <option value="denoise">🌟 Advanced Denoise (Bilateral)</option>
+            <option value="upscale">📐 AI Upscale 2x (Lanczos)</option>
+            <option value="colorize">🎨 Color Enhancement Pro</option>
+            <option value="restore">♻️ Full Restoration</option>
+            <option value="professional">👑 Professional Grade (All-in-One)</option>
+        </select>
+    </div>
+    
+    <div class="control-group">
+        <label>⚡ Kekuatan Utama</label>
+        <input type="range" id="enhanceGifStrength" min="0" max="100" value="75">
+        <span class="range-value" id="enhanceGifStrengthVal">75%</span>
+    </div>
+    
+    <div class="control-group">
+        <label>🔆 Kecerahan</label>
+        <input type="range" id="enhanceGifBrightness" min="50" max="150" value="100">
+        <span class="range-value" id="enhanceGifBrightnessVal">100%</span>
+    </div>
+    
+    <div class="control-group">
+        <label>🌓 Kontras (CLAHE)</label>
+        <input type="range" id="enhanceGifContrast" min="50" max="150" value="110">
+        <span class="range-value" id="enhanceGifContrastVal">110%</span>
+    </div>
+    
+    <div class="control-group">
+        <label>🎨 Saturasi</label>
+        <input type="range" id="enhanceGifSaturation" min="0" max="200" value="120">
+        <span class="range-value" id="enhanceGifSaturationVal">120%</span>
+    </div>
+    
+    <div class="control-group">
+        <label>🔍 Ketajaman Edge</label>
+        <input type="range" id="enhanceGifSharpness" min="0" max="100" value="30">
+        <span class="range-value" id="enhanceGifSharpnessVal">30%</span>
+    </div>
+    
+    <div class="control-group">
+        <label>🌫️ Noise Reduction</label>
+        <input type="range" id="enhanceGifDenoise" min="0" max="100" value="20">
+        <span class="range-value" id="enhanceGifDenoiseVal">20%</span>
+    </div>
+    
+    <button class="btn-primary btn-lg" onclick="processGifEnhance()">
+        <i class="fas fa-wand-magic-sparkles"></i> PROSES GIF ULTRA HD
+    </button>
+    
+    <div class="btn-group">
+        <button class="btn-secondary" onclick="downloadGifEnhanced()">
+            <i class="fas fa-download"></i> Unduh HD
+        </button>
+        <button class="btn-secondary" onclick="resetGifEnhance()">
+            <i class="fas fa-rotate-left"></i> Reset
+        </button>
+    </div>
+</div>
             <!-- ========== PAGE: Enhance Video ========== -->
             <div class="page" id="page-enhance-video">
                 <div class="upload-zone" id="enhanceVideoUpload" onclick="document.getElementById('enhanceVideoInput').click()">
