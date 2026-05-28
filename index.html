@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Studio - Enhance, Edit, Convert</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span>AI Studio</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">Peningkat AI</span>
+                <a href="#" class="nav-item active" data-page="enhance-image" onclick="navigateTo('enhance-image')">
+                    <i class="fas fa-image"></i>
+                    <span>Perjelas Gambar</span>
+                </a>
+                <a href="#" class="nav-item" data-page="enhance-gif" onclick="navigateTo('enhance-gif')">
+                    <i class="fas fa-film"></i>
+                    <span>Perjelas GIF</span>
+                </a>
+                <a href="#" class="nav-item" data-page="enhance-video" onclick="navigateTo('enhance-video')">
+                    <i class="fas fa-video"></i>
+                    <span>Perjelas Video</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <span class="nav-section-title">Edit & Konversi</span>
+                <a href="#" class="nav-item" data-page="edit-image" onclick="navigateTo('edit-image')">
+                    <i class="fas fa-paintbrush"></i>
+                    <span>Edit Gambar</span>
+                </a>
+                <a href="#" class="nav-item" data-page="image-to-video" onclick="navigateTo('image-to-video')">
+                    <i class="fas fa-clapperboard"></i>
+                    <span>Gambar → Video</span>
+                </a>
+                <a href="#" class="nav-item" data-page="image-to-gif" onclick="navigateTo('image-to-gif')">
+                    <i class="fas fa-photo-film"></i>
+                    <span>Gambar → GIF</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <span class="nav-section-title">Pengaturan</span>
+                <a href="#" class="nav-item" data-page="settings" onclick="navigateTo('settings')">
+                    <i class="fas fa-gear"></i>
+                    <span>Pengaturan</span>
+                </a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="theme-toggle" onclick="toggleTheme()">
+                <i class="fas fa-moon" id="themeIcon"></i>
+                <span>Mode Gelap</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <button class="menu-btn" id="menuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 id="pageTitle">Perjelas Gambar</h1>
+            <div class="topbar-actions">
+                <button class="btn-icon" onclick="showHelp()" title="Bantuan">
+                    <i class="fas fa-circle-question"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Pages -->
+        <div class="pages-container">
+
+            <!-- ========== PAGE: Enhance Image ========== -->
+            <div class="page active" id="page-enhance-image">
+                <div class="upload-zone" id="enhanceImageUpload" onclick="document.getElementById('enhanceImageInput').click()">
+                    <i class="fas fa-cloud-arrow-up"></i>
+                    <h3>Seret & Lepas Gambar atau Klik</h3>
+                    <p>Mendukung JPG, PNG, WEBP (Maks 20MB)</p>
+                    <input type="file" id="enhanceImageInput" accept="image/*" hidden>
+                </div>
+                <div class="workspace" id="enhanceImageWorkspace" style="display:none;">
+                    <div class="preview-container">
+                        <div class="preview-box">
+                            <span class="preview-label">Sebelum</span>
+                            <img id="enhanceImageOriginal" alt="Original">
+                        </div>
+                        <div class="preview-box">
+                            <span class="preview-label">Sesudah (AI)</span>
+                            <img id="enhanceImageResult" alt="Enhanced">
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <label>Mode AI</label>
+                            <select id="enhanceImageMode">
+                                <option value="auto">Otomatis (Cerdas)</option>
+                                <option value="sharpen">Pertajam</option>
+                                <option value="denoise">Kurangi Noise</option>
+                                <option value="superres">Super Resolusi 2x</option>
+                                <option value="superres4x">Super Resolusi 4x</option>
+                                <option value="restore">Restaurasi Foto Lama</option>
+                                <option value="face">Optimasi Wajah</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Kekuatan AI</label>
+                            <input type="range" id="enhanceImageStrength" min="0" max="100" value="75">
+                            <span class="range-value" id="enhanceImageStrengthVal">75%</span>
+                        </div>
+                        <div class="control-group">
+                            <label>Kecerahan</label>
+                            <input type="range" id="enhanceImageBrightness" min="50" max="200" value="100">
+                        </div>
+                        <div class="control-group">
+                            <label>Kontras</label>
+                            <input type="range" id="enhanceImageContrast" min="50" max="200" value="100">
+                        </div>
+                        <div class="control-group">
+                            <label>Saturasi</label>
+                            <input type="range" id="enhanceImageSaturation" min="0" max="300" value="100">
+                        </div>
+                        <button class="btn-primary btn-lg" onclick="processImageEnhance()">
+                            <i class="fas fa-wand-magic-sparkles"></i> Perbaiki dengan AI
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn-secondary" onclick="downloadResult('enhanceImageResult')">
+                                <i class="fas fa-download"></i> Unduh HD
+                            </button>
+                            <button class="btn-secondary" onclick="resetEnhanceImage()">
+                                <i class="fas fa-rotate-left"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-overlay" id="enhanceImageProgress" style="display:none;">
+                    <div class="progress-card">
+                        <div class="spinner"></div>
+                        <h3>AI Sedang Bekerja...</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="enhanceImageProgressBar"></div>
+                        </div>
+                        <p id="enhanceImageProgressText">Memproses...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PAGE: Enhance GIF ========== -->
+            <div class="page" id="page-enhance-gif">
+                <div class="upload-zone" id="enhanceGifUpload" onclick="document.getElementById('enhanceGifInput').click()">
+                    <i class="fas fa-film"></i>
+                    <h3>Unggah GIF untuk Diperjelas</h3>
+                    <p>Mendukung file GIF (Maks 30MB)</p>
+                    <input type="file" id="enhanceGifInput" accept="image/gif" hidden>
+                </div>
+                <div class="workspace" id="enhanceGifWorkspace" style="display:none;">
+                    <div class="preview-container">
+                        <div class="preview-box">
+                            <span class="preview-label">GIF Asli</span>
+                            <img id="enhanceGifOriginal" alt="Original GIF">
+                        </div>
+                        <div class="preview-box">
+                            <span class="preview-label">GIF Diperjelas</span>
+                            <img id="enhanceGifResult" alt="Enhanced GIF">
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <label>Mode</label>
+                            <select id="enhanceGifMode">
+                                <option value="sharpen">Pertajam</option>
+                                <option value="denoise">Kurangi Noise</option>
+                                <option value="upscale">Upscale 2x</option>
+                                <option value="colorize">Perkaya Warna</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Kekuatan</label>
+                            <input type="range" id="enhanceGifStrength" min="0" max="100" value="60">
+                            <span class="range-value" id="enhanceGifStrengthVal">60%</span>
+                        </div>
+                        <button class="btn-primary btn-lg" onclick="processGifEnhance()">
+                            <i class="fas fa-wand-magic-sparkles"></i> Perbaiki GIF
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn-secondary" onclick="downloadResult('enhanceGifResult')">
+                                <i class="fas fa-download"></i> Unduh GIF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-overlay" id="enhanceGifProgress" style="display:none;">
+                    <div class="progress-card">
+                        <div class="spinner"></div>
+                        <h3>Memproses GIF...</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="enhanceGifProgressBar"></div>
+                        </div>
+                        <p id="enhanceGifProgressText">Membaca frame...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PAGE: Enhance Video ========== -->
+            <div class="page" id="page-enhance-video">
+                <div class="upload-zone" id="enhanceVideoUpload" onclick="document.getElementById('enhanceVideoInput').click()">
+                    <i class="fas fa-video"></i>
+                    <h3>Unggah Video untuk Diperjelas</h3>
+                    <p>Mendukung MP4, WEBM, AVI (Maks 100MB)</p>
+                    <input type="file" id="enhanceVideoInput" accept="video/*" hidden>
+                </div>
+                <div class="workspace" id="enhanceVideoWorkspace" style="display:none;">
+                    <div class="preview-container">
+                        <div class="preview-box">
+                            <span class="preview-label">Video Asli</span>
+                            <video id="enhanceVideoOriginal" controls muted></video>
+                        </div>
+                        <div class="preview-box">
+                            <span class="preview-label">Video Diperjelas</span>
+                            <video id="enhanceVideoResult" controls muted></video>
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <label>Mode</label>
+                            <select id="enhanceVideoMode">
+                                <option value="sharpen">Pertajam</option>
+                                <option value="denoise">Kurangi Noise</option>
+                                <option value="stabilize">Stabilkan</option>
+                                <option value="color">Optimasi Warna</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Kekuatan</label>
+                            <input type="range" id="enhanceVideoStrength" min="0" max="100" value="50">
+                            <span class="range-value" id="enhanceVideoStrengthVal">50%</span>
+                        </div>
+                        <button class="btn-primary btn-lg" onclick="processVideoEnhance()">
+                            <i class="fas fa-wand-magic-sparkles"></i> Perbaiki Video
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn-secondary" onclick="downloadVideoResult()">
+                                <i class="fas fa-download"></i> Unduh Video
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-overlay" id="enhanceVideoProgress" style="display:none;">
+                    <div class="progress-card">
+                        <div class="spinner"></div>
+                        <h3>Memproses Video...</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="enhanceVideoProgressBar"></div>
+                        </div>
+                        <p id="enhanceVideoProgressText">Membaca frame video...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PAGE: Edit Image ========== -->
+            <div class="page" id="page-edit-image">
+                <div class="upload-zone" id="editImageUpload" onclick="document.getElementById('editImageInput').click()">
+                    <i class="fas fa-paintbrush"></i>
+                    <h3>Unggah Gambar untuk Diedit</h3>
+                    <p>Mendukung JPG, PNG, WEBP</p>
+                    <input type="file" id="editImageInput" accept="image/*" hidden>
+                </div>
+                <div class="workspace" id="editImageWorkspace" style="display:none;">
+                    <div class="editor-container">
+                        <canvas id="editCanvas" class="edit-canvas"></canvas>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <label>🔆 Kecerahan</label>
+                            <input type="range" id="editBrightness" min="0" max="200" value="100" oninput="applyEdit()">
+                        </div>
+                        <div class="control-group">
+                            <label>🌓 Kontras</label>
+                            <input type="range" id="editContrast" min="0" max="200" value="100" oninput="applyEdit()">
+                        </div>
+                        <div class="control-group">
+                            <label>🎨 Saturasi</label>
+                            <input type="range" id="editSaturation" min="0" max="200" value="100" oninput="applyEdit()">
+                        </div>
+                        <div class="control-group">
+                            <label>🌡️ Suhu Warna</label>
+                            <input type="range" id="editTemperature" min="-100" max="100" value="0" oninput="applyEdit()">
+                        </div>
+                        <div class="control-group">
+                            <label>🔍 Ketajaman</label>
+                            <input type="range" id="editSharpness" min="0" max="100" value="0" oninput="applyEdit()">
+                        </div>
+                        <div class="control-group">
+                            <label>💫 Blur</label>
+                            <input type="range" id="editBlur" min="0" max="20" value="0" oninput="applyEdit()">
+                        </div>
+                        <div class="control-group">
+                            <label>🔄 Rotasi</label>
+                            <input type="range" id="editRotate" min="0" max="360" value="0" oninput="applyEdit()">
+                        </div>
+                        <div class="control-group">
+                            <label>↔️ Flip Horizontal</label>
+                            <input type="checkbox" id="editFlipH" onchange="applyEdit()">
+                        </div>
+                        <div class="control-group">
+                            <label>↕️ Flip Vertikal</label>
+                            <input type="checkbox" id="editFlipV" onchange="applyEdit()">
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-primary" onclick="applyEdit()">
+                                <i class="fas fa-check"></i> Terapkan
+                            </button>
+                            <button class="btn-secondary" onclick="resetEdit()">
+                                <i class="fas fa-rotate-left"></i> Reset
+                            </button>
+                            <button class="btn-secondary" onclick="downloadEdit()">
+                                <i class="fas fa-download"></i> Unduh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PAGE: Image to Video ========== -->
+            <div class="page" id="page-image-to-video">
+                <div class="upload-zone" id="imgToVidUpload" onclick="document.getElementById('imgToVidInput').click()">
+                    <i class="fas fa-clapperboard"></i>
+                    <h3>Unggah Gambar untuk Dijadikan Video</h3>
+                    <p>Bisa unggah beberapa gambar sekaligus</p>
+                    <input type="file" id="imgToVidInput" accept="image/*" multiple hidden>
+                </div>
+                <div class="workspace" id="imgToVidWorkspace" style="display:none;">
+                    <div class="preview-container">
+                        <div class="preview-box full-width">
+                            <span class="preview-label">Preview</span>
+                            <video id="imgToVidPreview" controls muted loop></video>
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <label>Durasi per Gambar (detik)</label>
+                            <input type="range" id="imgToVidDuration" min="1" max="10" value="3">
+                            <span class="range-value" id="imgToVidDurationVal">3s</span>
+                        </div>
+                        <div class="control-group">
+                            <label>Efek Transisi</label>
+                            <select id="imgToVidTransition">
+                                <option value="fade">Fade</option>
+                                <option value="slide">Slide</option>
+                                <option value="zoom">Zoom</option>
+                                <option value="none">Tanpa Transisi</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Resolusi</label>
+                            <select id="imgToVidResolution">
+                                <option value="720">720p HD</option>
+                                <option value="1080" selected>1080p Full HD</option>
+                                <option value="4k">4K Ultra HD</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary btn-lg" onclick="processImageToVideo()">
+                            <i class="fas fa-film"></i> Buat Video
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn-secondary" onclick="downloadVideoResult('imgToVidPreview')">
+                                <i class="fas fa-download"></i> Unduh Video
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-overlay" id="imgToVidProgress" style="display:none;">
+                    <div class="progress-card">
+                        <div class="spinner"></div>
+                        <h3>Membuat Video...</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="imgToVidProgressBar"></div>
+                        </div>
+                        <p id="imgToVidProgressText">Merender frame...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PAGE: Image to GIF ========== -->
+            <div class="page" id="page-image-to-gif">
+                <div class="upload-zone" id="imgToGifUpload" onclick="document.getElementById('imgToGifInput').click()">
+                    <i class="fas fa-photo-film"></i>
+                    <h3>Unggah Gambar untuk Dijadikan GIF</h3>
+                    <p>Unggah beberapa gambar secara berurutan</p>
+                    <input type="file" id="imgToGifInput" accept="image/*" multiple hidden>
+                </div>
+                <div class="workspace" id="imgToGifWorkspace" style="display:none;">
+                    <div class="gif-frames-preview" id="gifFramesPreview"></div>
+                    <div class="preview-container">
+                        <div class="preview-box full-width">
+                            <span class="preview-label">Preview GIF</span>
+                            <img id="imgToGifPreview" alt="GIF Preview">
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <label>Durasi per Frame (ms)</label>
+                            <input type="range" id="imgToGifDelay" min="100" max="2000" value="500" step="100">
+                            <span class="range-value" id="imgToGifDelayVal">500ms</span>
+                        </div>
+                        <div class="control-group">
+                            <label>Kualitas GIF</label>
+                            <input type="range" id="imgToGifQuality" min="1" max="30" value="10">
+                            <span class="range-value" id="imgToGifQualityVal">10</span>
+                        </div>
+                        <div class="control-group">
+                            <label>Efek</label>
+                            <select id="imgToGifEffect">
+                                <option value="none">Tanpa Efek</option>
+                                <option value="fade">Fade</option>
+                                <option value="zoom">Zoom In</option>
+                                <option value="slide">Slide</option>
+                            </select>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-primary btn-lg" onclick="processImageToGif()">
+                                <i class="fas fa-film"></i> Buat GIF
+                            </button>
+                            <button class="btn-secondary" onclick="downloadGifResult()">
+                                <i class="fas fa-download"></i> Unduh GIF
+                            </button>
+                            <button class="btn-secondary" onclick="resetGifCreator()">
+                                <i class="fas fa-rotate-left"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-overlay" id="imgToGifProgress" style="display:none;">
+                    <div class="progress-card">
+                        <div class="spinner"></div>
+                        <h3>Membuat GIF...</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="imgToGifProgressBar"></div>
+                        </div>
+                        <p id="imgToGifProgressText">Mengompres frame...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== PAGE: Settings ========== -->
+            <div class="page" id="page-settings">
+                <div class="settings-container">
+                    <div class="settings-card">
+                        <h3><i class="fas fa-sliders"></i> Pengaturan Umum</h3>
+                        <div class="setting-item">
+                            <label>Format Output Default</label>
+                            <select id="settingFormat">
+                                <option value="png">PNG (Kualitas Terbaik)</option>
+                                <option value="jpg">JPG (Ukuran Kecil)</option>
+                                <option value="webp">WEBP (Modern)</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Kualitas Default</label>
+                            <select id="settingQuality">
+                                <option value="80">80% - Cepat</option>
+                                <option value="90" selected>90% - Seimbang</option>
+                                <option value="95">95% - Terbaik</option>
+                                <option value="100">100% - Maksimum</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-card">
+                        <h3><i class="fas fa-database"></i> Penyimpanan</h3>
+                        <div class="setting-item">
+                            <p>Cache browser digunakan untuk mempercepat pemrosesan.</p>
+                            <button class="btn-secondary" onclick="clearCache()">
+                                <i class="fas fa-trash"></i> Hapus Cache
+                            </button>
+                        </div>
+                    </div>
+                    <div class="settings-card">
+                        <h3><i class="fas fa-info-circle"></i> Informasi</h3>
+                        <p>AI Studio v2.0 — Pemrosesan dilakukan secara lokal di browser Anda. Tidak ada data yang dikirim ke server.</p>
+                        <p><strong>Fitur:</strong> Enhance, Edit, Convert, Upscale, Denoise, dan lainnya.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="helpModal" style="display:none;">
+        <div class="modal">
+            <button class="modal-close" onclick="closeHelp()"><i class="fas fa-xmark"></i></button>
+            <h2>📖 Cara Penggunaan</h2>
+            <div class="help-content">
+                <h3>🔮 Perjelas Gambar</h3>
+                <p>Unggah gambar, pilih mode AI (Auto, Pertajam, Super Resolusi, dll), atur kekuatan, lalu klik "Perbaiki dengan AI".</p>
+                <h3>🎬 Gambar → Video</h3>
+                <p>Unggah beberapa gambar, atur durasi dan transisi, lalu klik "Buat Video".</p>
+                <h3>🎞️ Gambar → GIF</h3>
+                <p>Unggah gambar secara berurutan, atur delay dan kualitas, lalu klik "Buat GIF".</p>
+                <h3>🎨 Edit Gambar</h3>
+                <p>Gunakan slider untuk mengatur kecerahan, kontras, saturasi, dan lainnya secara real-time.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
