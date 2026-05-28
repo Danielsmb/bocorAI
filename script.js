@@ -659,3 +659,439 @@ function applyEdit() {
 
         for (let i = 0; i < data.length; i += 4) {
             let r = data[i], g = data[i + 1], b = data[i + 2];
+
+            // Brightness
+            r *= brightness / 100;
+            g *= brightness / 100;
+            b *= brightness / 100;
+
+            // Contrast
+            const cf = (contrast / 100 - 1) * 127 + 127;
+            r = ((r - 128) * (cf / 128)) + 128;
+            g = ((g - 128) * (cf / 128)) + 128;
+            b = ((b - 128) * (cf / 128)) + 128;
+
+            // Saturation
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            const sf = saturation / 100;
+            r = gray + (r - gray) * sf;
+            g = gray + (g - gray) * sf;
+            b = gray + (b - gray) * sf;
+
+            // Temperature
+            if (temperature > 0) {
+                r += temperature * 0.5;
+                b -= temperature * 0.5;
+            } else {
+                r += temperature * 0.3;
+                b -= temperature * 0.8;
+            }
+
+            data[i] = Math.min(255, Math.max(0, r));
+            data[i + 1] = Math.min(255, Math.max(0, g));
+            data[i + 2] = Math.min(255, Math.max(0, b));
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+
+        // Blur
+        const blur = parseInt(document.getElementById('editBlur').value);
+        if (blur > 0) {
+            ctx.filter = `blur(${blur}px)`;
+            ctx.drawImage(canvas, 0, 0);
+            ctx.filter = 'none';
+        }
+
+        // Sharpness
+        const sharpness = parseInt(document.getElementById('editSharpness').value);
+        if (sharpness > 0) {
+            sharpenImage(ctx, w, h, sharpness);
+        }
+    };
+    img.src = state.files.editImage ? URL.createObjectURL(state.files.editImage) : '';
+}
+
+function resetEdit() {
+    document.getElementById('editBrightness').value = 100;
+    document.getElementById('editContrast').value = 100;
+    document.getElementById('editSaturation').value = 100;
+    document.getElementById('editTemperature').value = 0;
+    document.getElementById('editSharpness').value = 0;
+    document.getElementById('editBlur').value = 0;
+    document.getElementById('editRotate').value = 0;
+    document.getElementById('editFlipH').checked = false;
+    document.getElementById('editFlipV').checked = false;
+    applyEdit();
+}
+
+function downloadEdit() {
+    const canvas = document.getElementById('editCanvas');
+    const link = document.createElement('a');
+    link.download = 'edited-image.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+// ===================== PAGE: IMAGE TO VIDEO =====================
+document.getElementById('imgToVidInput').addEventListener('change', async function(e) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    state.files.imgToVid = files;
+
+    // Show preview of first image
+    const img = await loadImage(files[0]);
+    const video = document.getElementById('imgToVidPreview');
+    // Create a temporary canvas for preview
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    video.poster = canvas.toDataURL();
+
+    document.getElementById('imgToVidUpload').style.display = 'none';
+    document.getElementById('imgToVidWorkspace').style.display = 'grid';
+});
+
+async function processImageToVideo() {
+    if (state.files.imgToVid.length === 0) return;
+
+    showProgress('imgToVid');
+    const duration = parseInt(document.getElementById('imgToVidDuration').value);
+    const transition = document.getElementById('imgToVidTransition').value;
+    const resolution = document.getElementById('imgToVidResolution').value;
+
+    let targetWidth = 1920, targetHeight = 1080;
+    if (resolution === '720') { targetWidth = 1280; targetHeight = 720; }
+    if (resolution === '1080') { targetWidth = 1920; targetHeight = 1080; }
+    if (resolution === '4k') { targetWidth = 3840; targetHeight = 2160; }
+
+    updateProgress('imgToVid', 10, 'Memuat gambar...');
+    await sleep(300);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext('2d');
+
+    const stream = canvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm', videoBitsPerSecond: 8000000 });
+    const chunks = [];
+
+    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+    recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        document.getElementById('imgToVidPreview').src = url;
+        state.processed.imgToVid = blob;
+        updateProgress('imgToVid', 100, 'Selesai!');
+        setTimeout(() => hideProgress('imgToVid'), 500);
+    };
+
+    recorder.start();
+
+    const fps = 30;
+    const framesPerImage = duration * fps;
+    const transitionFrames = Math.min(30, framesPerImage * 0.3);
+
+    for (let i = 0; i < state.files.imgToVid.length; i++) {
+        const img = await loadImage(state.files.imgToVid[i]);
+        updateProgress('imgToVid', 15 + (i / state.files.imgToVid.length) * 70,
+            `Merender gambar ${i + 1}/${state.files.imgToVid.length}...`);
+
+        // Calculate fit
+        const scale = Math.min(targetWidth / img.naturalWidth, targetHeight / img.naturalHeight);
+        const drawW = img.naturalWidth * scale;
+        const drawH = img.naturalHeight * scale;
+        const offsetX = (targetWidth - drawW) / 2;
+        const offsetY = (targetHeight - drawH) / 2;
+
+        for (let f = 0; f < framesPerImage; f++) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+            const progress = f / framesPerImage;
+
+            if (transition === 'fade' && f < transitionFrames && i > 0) {
+                ctx.globalAlpha = f / transitionFrames;
+            } else if (transition === 'zoom' && f < transitionFrames) {
+                const zScale = 1 + (1 - f / transitionFrames) * 0.2;
+                ctx.save();
+                ctx.translate(targetWidth / 2, targetHeight / 2);
+                ctx.scale(zScale, zScale);
+                ctx.translate(-targetWidth / 2, -targetHeight / 2);
+                ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+                ctx.restore();
+                continue;
+            } else if (transition === 'slide' && f < transitionFrames) {
+                const slideX = (1 - f / transitionFrames) * targetWidth * 0.5;
+                ctx.drawImage(img, offsetX + slideX, offsetY, drawW, drawH);
+                ctx.globalAlpha = 1;
+                ctx.drawImage(canvas, 0, 0);
+                await sleep(1000 / fps);
+                continue;
+            }
+
+            // Ken Burns effect
+            const kbScale = 1 + progress * 0.05;
+            const kbX = offsetX - (drawW * kbScale - drawW) / 2;
+            const kbY = offsetY - (drawH * kbScale - drawH) / 2;
+
+            ctx.drawImage(img, kbX, kbY, drawW * kbScale, drawH * kbScale);
+            ctx.globalAlpha = 1;
+
+            await sleep(1000 / fps);
+        }
+    }
+
+    recorder.stop();
+}
+
+// ===================== PAGE: IMAGE TO GIF =====================
+document.getElementById('imgToGifInput').addEventListener('change', async function(e) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    state.files.imgToGif = files;
+
+    // Show frame previews
+    const container = document.getElementById('gifFramesPreview');
+    container.innerHTML = '';
+    for (const file of files) {
+        const url = URL.createObjectURL(file);
+        const thumb = document.createElement('img');
+        thumb.src = url;
+        thumb.className = 'gif-frame-thumb';
+        container.appendChild(thumb);
+    }
+
+    // Preview first frame
+    const img = await loadImage(files[0]);
+    document.getElementById('imgToGifPreview').src = img.src;
+
+    document.getElementById('imgToGifUpload').style.display = 'none';
+    document.getElementById('imgToGifWorkspace').style.display = 'grid';
+});
+
+async function processImageToGif() {
+    if (state.files.imgToGif.length === 0) return;
+
+    showProgress('imgToGif');
+    const delay = parseInt(document.getElementById('imgToGifDelay').value);
+    const quality = parseInt(document.getElementById('imgToGifQuality').value);
+    const effect = document.getElementById('imgToGifEffect').value;
+
+    updateProgress('imgToGif', 10, 'Membuat GIF...');
+    await sleep(300);
+
+    // Load all images
+    const images = [];
+    for (const file of state.files.imgToGif) {
+        images.push(await loadImage(file));
+    }
+
+    // Determine max dimensions
+    let maxWidth = 0, maxHeight = 0;
+    for (const img of images) {
+        maxWidth = Math.max(maxWidth, img.naturalWidth);
+        maxHeight = Math.max(maxHeight, img.naturalHeight);
+    }
+
+    // Limit size
+    const maxSize = 800;
+    if (maxWidth > maxSize || maxHeight > maxSize) {
+        const ratio = Math.min(maxSize / maxWidth, maxSize / maxHeight);
+        maxWidth = Math.round(maxWidth * ratio);
+        maxHeight = Math.round(maxHeight * ratio);
+    }
+
+    // Create GIF using canvas frames
+    const canvas = document.createElement('canvas');
+    canvas.width = maxWidth;
+    canvas.height = maxHeight;
+    const ctx = canvas.getContext('2d');
+
+    // Collect frames as data URLs
+    const frames = [];
+
+    for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        updateProgress('imgToGif', 20 + (i / images.length) * 60,
+            `Memproses frame ${i + 1}/${images.length}...`);
+
+        // Calculate fit
+        const scale = Math.min(maxWidth / img.naturalWidth, maxHeight / img.naturalHeight);
+        const drawW = img.naturalWidth * scale;
+        const drawH = img.naturalHeight * scale;
+        const offsetX = (maxWidth - drawW) / 2;
+        const offsetY = (maxHeight - drawH) / 2;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, maxWidth, maxHeight);
+
+        if (effect === 'zoom') {
+            ctx.save();
+            ctx.translate(maxWidth / 2, maxHeight / 2);
+            ctx.scale(1.1, 1.1);
+            ctx.translate(-maxWidth / 2, -maxHeight / 2);
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+            ctx.restore();
+        } else if (effect === 'fade') {
+            ctx.globalAlpha = 0.8;
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+            ctx.globalAlpha = 1;
+        } else {
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+        }
+
+        frames.push(canvas.toDataURL('image/png'));
+    }
+
+    updateProgress('imgToGif', 85, 'Mengompres GIF...');
+    await sleep(300);
+
+    // Build GIF using simple encoder
+    const gifBlob = await encodeGif(frames, delay, quality, maxWidth, maxHeight);
+
+    const url = URL.createObjectURL(gifBlob);
+    document.getElementById('imgToGifPreview').src = url;
+    state.processed.imgToGif = gifBlob;
+
+    updateProgress('imgToGif', 100, 'Selesai!');
+    await sleep(500);
+    hideProgress('imgToGif');
+}
+
+// Simple GIF encoder
+async function encodeGif(frames, delay, quality, width, height) {
+    // Use canvas-based approach with GIF encoder library
+    // For simplicity, we'll create an animated canvas recording
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    const stream = canvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm',
+        videoBitsPerSecond: 2000000
+    });
+
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+    return new Promise((resolve) => {
+        recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            resolve(blob);
+        };
+
+        recorder.start();
+
+        let frameIndex = 0;
+        const frameDuration = delay / 1000;
+
+        const showFrame = () => {
+            if (frameIndex >= frames.length) {
+                // Show last frame for a bit longer
+                setTimeout(() => {
+                    recorder.stop();
+                }, frameDuration * 1000);
+                return;
+            }
+
+            const img = new Image();
+            img.onload = () => {
+                ctx.clearRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+                frameIndex++;
+                setTimeout(showFrame, frameDuration * 1000);
+            };
+            img.src = frames[frameIndex];
+        };
+
+        showFrame();
+    });
+}
+
+function downloadGifResult() {
+    const img = document.getElementById('imgToGifPreview');
+    if (!img.src) {
+        alert('Belum ada GIF yang dibuat.');
+        return;
+    }
+
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'created-animation.webm';
+    a.click();
+}
+
+function resetGifCreator() {
+    document.getElementById('imgToGifUpload').style.display = 'block';
+    document.getElementById('imgToGifWorkspace').style.display = 'none';
+    document.getElementById('imgToGifInput').value = '';
+    document.getElementById('gifFramesPreview').innerHTML = '';
+    state.files.imgToGif = [];
+}
+
+// ===================== DOWNLOAD RESULT =====================
+function downloadResult(canvasId) {
+    const el = document.getElementById(canvasId);
+    if (!el || !el.src) {
+        alert('Belum ada hasil yang diproses.');
+        return;
+    }
+
+    const format = document.getElementById('settingFormat')?.value || 'png';
+    const quality = parseInt(document.getElementById('settingQuality')?.value || 90) / 100;
+
+    const a = document.createElement('a');
+    const mime = format === 'jpg' ? 'image/jpeg' : format === 'webp' ? 'image/webp' : 'image/png';
+    const ext = format === 'jpg' ? 'jpg' : format === 'webp' ? 'webp' : 'png';
+
+    a.href = el.src;
+    a.download = `enhanced-image.${ext}`;
+    a.click();
+}
+
+// ===================== SETTINGS =====================
+function clearCache() {
+    localStorage.clear();
+    alert('Cache berhasil dihapus!');
+}
+
+// ===================== HELPER: SLEEP =====================
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ===================== DRAG & DROP =====================
+document.querySelectorAll('.upload-zone').forEach(zone => {
+    zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.style.borderColor = 'var(--accent)';
+        zone.style.background = 'var(--accent-light)';
+    });
+
+    zone.addEventListener('dragleave', () => {
+        zone.style.borderColor = '';
+        zone.style.background = '';
+    });
+
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.style.borderColor = '';
+        zone.style.background = '';
+
+        const input = zone.querySelector('input[type="file"]');
+        if (e.dataTransfer.files.length > 0) {
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+});
+
+// ===================== INIT =====================
+console.log('🚀 AI Studio loaded successfully!');
