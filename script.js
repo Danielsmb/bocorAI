@@ -1618,3 +1618,24 @@ document.querySelectorAll('.upload-zone').forEach(zone => {
 
 // ===================== INIT =====================
 console.log('🚀 AI Studio loaded successfully!');
+function downloadGifEnhanced() {
+    if (!state.processed.enhanceGif) {
+        alert('Belum ada hasil yang diproses!');
+        return;
+    }
+    
+    const link = document.createElement('a');
+    link.download = 'enhanced-gif-ultra-hd.png';
+    link.href = state.processed.enhanceGif.toDataURL('image/png');
+    link.click();
+    
+    showNotification('Download dimulai!', 'success');
+}
+
+function resetGifEnhance() {
+    document.getElementById('enhanceGifUpload').style.display = 'block';
+    document.getElementById('enhanceGifWorkspace').style.display = 'none';
+    document.getElementById('enhanceGifInput').value = '';
+    state.files.enhanceGif = null;
+    state.processed.enhanceGif = null;
+}
